@@ -1,6 +1,7 @@
 <template>
 <nav>
-    <v-toolbar>
+    <v-toolbar app
+               fixed>
       <v-icon @click="drawer = !drawer">mdi-apps</v-icon>
       <v-toolbar-title class="px-2">Title</v-toolbar-title>
 
