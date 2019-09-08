@@ -1,30 +1,41 @@
 <template>
 <nav>
-    <v-toolbar app
-               fixed>
-      <v-icon @click="drawer = !drawer">mdi-apps</v-icon>
-      <v-toolbar-title class="px-2">Title</v-toolbar-title>
+  <v-app-bar  color="deep-purple accent-4" dark fixed>
+    <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
 
-      <div class="flex-grow-1"></div>
+    <v-toolbar-title>Page title</v-toolbar-title>
 
-      <v-toolbar-items>
-        <v-btn text>Link 1</v-btn>
-        <v-btn text>Link 2</v-btn>
-        <v-btn text>Link 3</v-btn>
-      </v-toolbar-items>
+    <div class="flex-grow-1"></div>
 
-      <template v-if="$vuetify.breakpoint.smAndUp">
-        <v-btn icon>
-          <v-icon>mdi-export-variant</v-icon>
-        </v-btn>
-        <v-btn icon>
-          <v-icon>mdi-delete-circle</v-icon>
-        </v-btn>
-        <v-btn icon>
-          <v-icon>mdi-plus-circle</v-icon>
+    <v-btn icon>
+      <v-icon>mdi-heart</v-icon>
+    </v-btn>
+
+    <v-btn icon>
+      <v-icon>mdi-magnify</v-icon>
+    </v-btn>
+
+    <v-menu
+            left
+            bottom
+    >
+      <template v-slot:activator="{ on }">
+        <v-btn icon v-on="on">
+          <v-icon>mdi-dots-vertical</v-icon>
         </v-btn>
       </template>
-    </v-toolbar>
+
+      <v-list>
+        <v-list-item
+                v-for="n in 5"
+                :key="n"
+                @click="() => {}"
+        >
+          <v-list-item-title>Option {{ n }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+  </v-app-bar>
 
     <v-navigation-drawer absolute temporary :mini-variant.sync="mini" v-model="drawer">
       <v-list-item>
