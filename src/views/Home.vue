@@ -1,8 +1,72 @@
 <template>
   <div class="about">
+    <div class="text-center ma-2">
+      <v-snackbar
+              :timeout="4000"
+              top
+              v-model="snackbar"
+      >
+        {{ text }}
+        <v-btn
+                color="pink"
+                text
+                @click="snackbar = false"
+        >
+          Close
+        </v-btn>
+      </v-snackbar>
+    </div>
     <h1 class="my-6">Dashboard</h1>
 
     <v-container class="grey lighten-5" fluid="">
+
+
+      <div class="text-center">
+        <v-dialog v-model="dialog" width="500">
+          <template v-slot:activator="{ on }">
+            <v-btn color="red lighten-2" dark v-on="on">
+              Click Me
+            </v-btn>
+          </template>
+
+          <v-card>
+            <v-card-title class="headline grey lighten-2" primary-title>
+              Privacy Policy
+            </v-card-title>
+
+            <v-card-text>
+              <v-form v-model="valid" ref="form">
+              <v-text-field
+                      v-model="title"
+                      label="Title"
+                      :rules="titleRules"
+                      required
+              ></v-text-field>
+              <v-text-field
+                      v-model="content"
+                      label="Content"
+                      :rules="contentRules"
+                      required
+              ></v-text-field>
+                <v-btn color="primary lighten-2" :loading="loading" text @click="submit">
+                  Submit
+                </v-btn>
+              </v-form>
+            </v-card-text>
+
+            <v-divider></v-divider>
+
+            <v-card-actions>
+              <div class="flex-grow-1"></div>
+              <v-btn color="primary" text @click="dialog = false">
+                I accept
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </div>
+
+
 
       <div class="text-left mb-4">
         <v-chip class="ma-2" label text-color="grey" @click="sortBY('title')">
@@ -17,7 +81,7 @@
 
       </div>
 
-      <v-card class="pa-2" outlined tile v-for="project in projects" :key="project.title">
+      <v-card class="pa-2" outlined tile v-for="project in projects" :key="project.id">
         <v-row :class="`project ${project.status}`">
           <v-col cols="6" sm="3">
             <div class="caption grey--text">Project Title</div>
@@ -41,21 +105,69 @@
 </template>
 
 <script>
+  import db from '@/fb'
+
   export default {
     data(){
       return {
-        projects: [
-          {title: 'Design a new website', person: 'The Net Ninja', due: '1st jan 2019', status: 'ongoing', content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut consequuntur dignissimos dolore ducimus neque, quibusdam rem voluptas! Amet consectetur dolor dolorem esse exercitationem explicabo fugit id illo labore laborum nam nostrum obcaecati officia optio, placeat possimus quaerat quo quos sapiente sed sequi temporibus veniam. Accusantium culpa necessitatibus nobis tenetur veritatis.'},
-          {title: 'Code up the home page', person: 'Nawaz', due: '2nd jan 2019', status: 'complete', content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut consequuntur dignissimos dolore ducimus neque, quibusdam rem voluptas! Amet consectetur dolor dolorem esse exercitationem explicabo fugit id illo labore laborum nam nostrum obcaecati officia optio, placeat possimus quaerat quo quos sapiente sed sequi temporibus veniam. Accusantium culpa necessitatibus nobis tenetur veritatis.'},
-          {title: 'Design video thumbnails', person: 'Maruf', due: '3rd jan 2019', status: 'complete', content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut consequuntur dignissimos dolore ducimus neque, quibusdam rem voluptas! Amet consectetur dolor dolorem esse exercitationem explicabo fugit id illo labore laborum nam nostrum obcaecati officia optio, placeat possimus quaerat quo quos sapiente sed sequi temporibus veniam. Accusantium culpa necessitatibus nobis tenetur veritatis.'},
-          {title: 'Create a community forum', person: 'Jayanta', due: '4th jan 2019', status: 'overdue', content: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aut consequuntur dignissimos dolore ducimus neque, quibusdam rem voluptas! Amet consectetur dolor dolorem esse exercitationem explicabo fugit id illo labore laborum nam nostrum obcaecati officia optio, placeat possimus quaerat quo quos sapiente sed sequi temporibus veniam. Accusantium culpa necessitatibus nobis tenetur veritatis.'},
-        ]
+        valid: false,
+        dialog: false,
+        title: '',
+        content: '',
+        loading: false,
+        snackbar: false,
+        text: 'Hello, I\'m a snackbar',
+        titleRules: [
+          v => !!v || 'Title is required',
+          v => v.length <= 30 || 'Title must be less than 30 characters',
+        ],
+        contentRules: [
+          v => !!v || 'Content is required',
+          v => v.length <= 30 || 'Content must be less than 30 characters',
+        ],
+        projects: []
       }
     },
     methods: {
       sortBY(prop){
         this.projects.sort((a, b) => a[prop] < b[prop] ? -1 : 1)
+      },
+      submit(){
+        if (this.$refs.form.validate()) {
+          this.loading = true
+          const project = {
+            title: this.title,
+            content: this.content,
+            due: '9/9/2019',
+            person: 'Maruf Hasan',
+            status: 'overdue'
+          }
+
+          db.collection('projects').add(project)
+                  .then(() => {
+                    this.loading = false
+                    this.dialog = false
+                    this.snackbar = true
+                    this.$emit('projectAdded')
+                    console.log('added to db')
+                  })
+                  .catch(errors => console.log(errors))
+        }
       }
+    },
+    created() {
+      db.collection('projects').onSnapshot(res => {
+        const changes = res.docChanges()
+
+        changes.forEach(change => {
+          if(change.type === 'added'){
+            this.projects.push({
+              ...change.doc.data(),
+              id: change.doc.id
+            })
+          }
+        })
+      })
     }
   }
 </script>
